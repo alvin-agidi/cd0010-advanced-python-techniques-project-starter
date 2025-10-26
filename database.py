@@ -12,6 +12,9 @@ data on NEOs and close approaches extracted by `extract.load_neos` and
 You'll edit this file in Tasks 2 and 3.
 """
 
+import operator
+from functools import reduce
+
 
 class NEODatabase:
     """A database of near-Earth objects and their close approaches.
@@ -21,6 +24,7 @@ class NEODatabase:
     help fetch NEOs by primary designation or by name and to help speed up
     querying for close approaches that match criteria.
     """
+
     def __init__(self, neos, approaches):
         """Create a new `NEODatabase`.
 
@@ -43,8 +47,13 @@ class NEODatabase:
         self._approaches = approaches
 
         # TODO: What additional auxiliary data structures will be useful?
+        self.desToNEO = {neo.designation: neo for neo in neos}
+        self.nameToNEO = {neo.name: neo for neo in neos}
 
         # TODO: Link together the NEOs and their close approaches.
+        for ca in approaches:
+            ca.neo = self.desToNEO[ca._designation]
+            self.desToNEO[ca._designation].approaches.append(ca)
 
     def get_neo_by_designation(self, designation):
         """Find and return an NEO by its primary designation.
@@ -60,7 +69,7 @@ class NEODatabase:
         :return: The `NearEarthObject` with the desired primary designation, or `None`.
         """
         # TODO: Fetch an NEO by its primary designation.
-        return None
+        return self.desToNEO[designation] if designation in self.desToNEO else None
 
     def get_neo_by_name(self, name):
         """Find and return an NEO by its name.
@@ -77,7 +86,7 @@ class NEODatabase:
         :return: The `NearEarthObject` with the desired name, or `None`.
         """
         # TODO: Fetch an NEO by its name.
-        return None
+        return self.nameToNEO[name] if name in self.nameToNEO else None
 
     def query(self, filters=()):
         """Query close approaches to generate those that match a collection of filters.
@@ -94,5 +103,13 @@ class NEODatabase:
         :return: A stream of matching `CloseApproach` objects.
         """
         # TODO: Generate `CloseApproach` objects that match all of the filters.
+        if not filters:
+            yield from self._approaches
         for approach in self._approaches:
-            yield approach
+            valid = True
+            for filter in filters:
+                if not filter(approach):
+                    valid = False
+                    break
+            if valid:
+                yield approach
