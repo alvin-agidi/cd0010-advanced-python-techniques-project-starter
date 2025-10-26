@@ -12,8 +12,10 @@ line, and uses the resulting collections to build an `NEODatabase`.
 
 You'll edit this file in Task 2.
 """
+
 import csv
 import json
+from collections import defaultdict
 
 from models import NearEarthObject, CloseApproach
 
@@ -25,7 +27,19 @@ def load_neos(neo_csv_path):
     :return: A collection of `NearEarthObject`s.
     """
     # TODO: Load NEO data from the given CSV file.
-    return ()
+    res = []
+    with open(neo_csv_path, "r") as file:
+        reader = csv.DictReader(file, delimiter=",")
+        for row in reader:
+            info = {
+                "designation": row["pdes"],
+                "name": row["name"],
+                "diameter": row["diameter"],
+                "hazardous": row["pha"],
+            }
+            neo = NearEarthObject(info)
+            res.append(neo)
+    return res
 
 
 def load_approaches(cad_json_path):
@@ -35,4 +49,16 @@ def load_approaches(cad_json_path):
     :return: A collection of `CloseApproach`es.
     """
     # TODO: Load close approach data from the given JSON file.
-    return ()
+    res = []
+    with open(cad_json_path, "r") as file:
+        data = json.load(file)
+        for row in data["data"]:
+            info = {
+                "designation": row[0],
+                "time": row[3],
+                "distance": row[4],
+                "velocity": row[7],
+            }
+            ca = CloseApproach(info)
+            res.append(ca)
+    return res
